@@ -1,0 +1,5 @@
+# Force C++20 for files clangd can't match to a real compile command yet
+# (headers not #included by any .cpp fall back to a guessed command —
+# sometimes a C one — which breaks <cstdint>, enum class, etc.).
+CompileFlags:
+  Add: [-xc++, -std=c++20]

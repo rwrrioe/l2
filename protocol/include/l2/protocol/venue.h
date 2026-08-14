@@ -1,0 +1,6 @@
+struct SpotPolicy {
+};
+
+struct FuturesPolicy {
+
+};
