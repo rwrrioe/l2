@@ -1,0 +1,78 @@
+{
+    "version": 5,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "/opt/homebrew",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "dev",
+            "displayName": "Debug",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "asan",
+            "displayName": "ASan+UBSan tests",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build-asan",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "L2_SANITIZE": "ON"
+            }
+        },
+        {
+            "name": "tsan",
+            "displayName": "TSan (recorder/spsc threads)",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build-tsan",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "L2_TSAN": "ON"
+            }
+        },
+        {
+            "name": "rel-checked",
+            "displayName": "Release + invariants (primary replay mode)",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build-rel",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "L2_CHECK_INVARIANTS": "ON"
+            }
+        },
+        {
+            "name": "hot",
+            "displayName": "-O3 -march=native -fno-exceptions, benchmarks",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build-hot",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "L2_CHECK_INVARIANTS": "OFF",
+                "L2_HOT_RELEASE": "ON",
+                "L2_BUILD_TESTS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        { "name": "dev",         "configurePreset": "dev" },
+        { "name": "asan",        "configurePreset": "asan" },
+        { "name": "tsan",        "configurePreset": "tsan" },
+        { "name": "rel-checked", "configurePreset": "rel-checked" },
+        { "name": "hot",         "configurePreset": "hot" }
+    ],
+    "testPresets": [
+        {
+            "name": "asan",
+            "configurePreset": "asan",
+            "output": { "outputOnFailure": true }
+        }
+    ]
+}

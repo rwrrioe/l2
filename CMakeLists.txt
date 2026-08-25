@@ -18,12 +18,11 @@ include(cmake/Sanitizers.cmake)
 include(cmake/Dependencies.cmake)
 
 find_package(OpenSSL REQUIRED)
-# system/asio/beast are header-only in modern Boost — they ship no per-component
-# config package; all header-only Boost is exposed via the Boost::headers target.
 find_package(Boost CONFIG REQUIRED)
 find_package(simdjson REQUIRED)
 
 add_subdirectory(common)
+add_subdirectory(spsc)
 add_subdirectory(protocol)
 add_subdirectory(book)
 add_subdirectory(transport)

@@ -1,5 +1,11 @@
-# Force C++20 for files clangd can't match to a real compile command yet
-# (headers not #included by any .cpp fall back to a guessed command —
-# sometimes a C one — which breaks <cstdint>, enum class, etc.).
 CompileFlags:
-  Add: [-xc++, -std=c++20]
+  Add:
+    - -xc++
+    - -std=c++20
+    - -I/Users/damirkazahov/Documents/leapfirst-l2/common/include
+    - -I/Users/damirkazahov/Documents/leapfirst-l2/protocol/include
+    - -I/Users/damirkazahov/Documents/leapfirst-l2/book/include
+    - -I/Users/damirkazahov/Documents/leapfirst-l2/transport/include
+    - -I/Users/damirkazахов/Documents/leapfirst-l2/signals/include
+    - -I/Users/damirkazahov/Documents/leapfirst-l2/app/include
+  CompilationDatabase: build
