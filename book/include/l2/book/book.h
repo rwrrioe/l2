@@ -1,7 +1,8 @@
 #pragma once
-#include <l2/storage_map.h>
-#include <l2/top_of_book.h>
-#include <l2/storage_array.h>
+#include <l2/book/top_of_book.h>
+#include <l2/book/storage_map.h>
+#include <l2/book/storage_hash.h>
+#include <l2/book/storage_array.h>
 #include <span>
 
 template<typename BidS, typename AskS>
@@ -51,7 +52,7 @@ private:
         top_.bid_px = b ? b->px: kInvalidTick;
         top_.bid_qty = b ? b->qty : Qty{0};
 
-        top_.ask_px = a ? a->qty : kInvalidTick;
+        top_.ask_px = a ? a->px : kInvalidTick;
         top_.ask_qty = a ? a->qty : Qty{0};
     }
 
@@ -63,6 +64,9 @@ template<Side> class MapStorage; template<Side> class ArrayStorage; template<Sid
 
 using BookMap = BookL2<MapStorage<Side::Buy>, MapStorage<Side::Sell>>;
 using BookArray = BookL2<ArrayStorage<Side::Buy>,ArrayStorage<Side::Sell>>;
+using BookHash =  BookL2<HashStorage<Side::Buy>,  HashStorage<Side::Sell>>;
+
 
 extern template class BookL2<MapStorage<Side::Buy>, MapStorage<Side::Sell>>;
 extern template class BookL2<ArrayStorage<Side::Buy>, ArrayStorage<Side::Sell>>;
+extern template class BookL2<HashStorage<Side::Buy>,  HashStorage<Side::Sell>>;

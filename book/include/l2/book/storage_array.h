@@ -22,7 +22,7 @@ class ArrayStorage {
 
     bool in_band (Ticks t) const noexcept {
         const int64_t v = static_cast<int64_t>(t);
-        return v >=lo_ && lo_ + int64_t(kBand);
+        return v >=lo_ && v < lo_ + int64_t(kBand);
     }
 
     static bool better(Ticks a, Ticks b) noexcept {
@@ -38,18 +38,62 @@ class ArrayStorage {
         int64_t t = static_cast<int64_t>(best_);
         const int64_t step = (S == Side::Buy) ? -1 : +1;
 
-        for (;;) {
-            t += step;
-
+        for (t += step; in_band(Ticks{t}); t += step) {
             if (!(qty_[slot(Ticks{t})] == Qty{0}) ) {best_ = Ticks{t}; return;}
         }
+        best_ = kInvalidTick;   // live_ > 0, но всё живое вне band быть не может — защитный ход
     }
 
-    void recenter(Ticks px) noexcept;
+    void recenter(Ticks px) noexcept {
+        const int64_t p = static_cast<int64_t>(px);
+        const int64_t new_lo = p - int64_t(kBand / 2);
+
+        if (new_lo >= lo_ + int64_t(kBand) || new_lo + int64_t(kBand) <= lo_) {
+            clear();
+            lo_ = new_lo;
+            return;
+        }
+
+        const int64_t from = (new_lo > lo_) ? lo_ : new_lo + int64_t(kBand);
+        const int64_t to = (new_lo > lo_) ? new_lo : lo_ + int64_t(kBand);
+
+        bool best_lost = false;
+        for (int64_t t = from; t < to; ++t) {
+            Qty& c = qty_[slot(Ticks{t})];
+
+            if (!(c == Qty{0})) {
+                c = Qty{0};
+                --live_;
+                if (Ticks{t} == best_) best_lost = true;
+            }
+        }
+
+        lo_ = new_lo;
+
+        if (best_lost) {
+            best_ = kInvalidTick;
+            if (live_ != 0) {
+                const int64_t start = (S == Side::Buy) ? lo_ + int64_t(kBand) - 1 : lo_;
+                const int64_t step = (S == Side::Buy ) ? -1 : +1;
+
+                for (int64_t t = start; in_band(Ticks{t}); t += step ) {
+                    if(!(qty_[slot(Ticks{t})] == Qty{0})) {best_ = Ticks{t}; break;}
+                }
+
+            }
+        }
+
+    };
+
 public:
     void update(Ticks px, Qty q) noexcept {
         if (!in_band(px)) {
             if (q == Qty{0}) return;
+            // глубокий уровень за окном (хуже best) — не отслеживаем: окно
+            // следует за вершиной книги, а recenter на далёкую цену выселил
+            // бы всю вершину. Двигаем окно только когда рынок улучшается
+            // за его край.
+            if (!better(px, best_)) return;
             recenter(px);
         }
 
@@ -85,13 +129,12 @@ public:
             const Qty q = qty_[slot(Ticks(t))];
 
             if (!(q == Qty{0})) { *out++ = BestLevel{Ticks{t}, q}; ++k;}
-
-            return k;
-
         }
+
+        return k;
     }
 
-    std::optional<BestLevel> scan_best_brutforce() const noexcept {
+    std::optional<BestLevel> scan_best_bruteforce() const noexcept {
         std::optional<BestLevel> r;
 
         for (int64_t t = lo_; t < lo_ + int64_t(kBand); ++t) {

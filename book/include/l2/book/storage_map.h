@@ -31,7 +31,7 @@ public:
         size_t k = 0;
 
         for (auto it = levels_.begin(); it != levels_.end() && k < n; ++it, ++k) {
-            *out = BestLevel{it->first, it->second};
+            *out++ = BestLevel{it->first, it->second};
         }
 
         return k;

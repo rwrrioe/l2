@@ -1,7 +1,7 @@
 #pragma once
-#include "l2/top_of_book.h"
+#include <l2/book/top_of_book.h>
 #include <cassert>
-#include <l2/book.h>
+#include <l2/book/book.h>
 
 template<typename BidS, typename AskS>
 void BookL2<BidS,AskS>::check_invariants() const noexcept {
