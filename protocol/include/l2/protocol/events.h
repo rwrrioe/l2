@@ -1,16 +1,17 @@
+#pragma once
 #include <cstdint>
 #include <algorithm>
 #include <l2/common/types.h>
 #include <span>
 
 struct DepthEvent {
-    int64_t u;
-    int64_t U;
-    int64_t pu;
+    uint64_t u;
+    uint64_t U;
+    uint64_t pu;
     static constexpr uint64_t kNoPu = ~0ull;
 
     uint64_t event_time_us;
-    uint64_t rx_timestaml_ns;
+    uint64_t rx_timestamp_ns;
 
     SymbolId symbol;
 
@@ -18,9 +19,22 @@ struct DepthEvent {
     std::span<const LevelUpdate> asks;
 };
 
+struct SnapshotEvent {
+    uint64_t last_update_id;
+    uint64_t rx_timestamp_ns;
+    SymbolId symbol;
+
+    std::span<const LevelUpdate>bids;
+    std::span<const LevelUpdate> asks;
+};
+
+enum class ParseError : uint8_t {
+    BadJSON, UnknownStream, TooManyLevels, BadDecimal, PriceOffTick
+};
+
 class EventBuffer {
     struct StoredHeader {
-        int64_t U,u,pu;
+        uint64_t U,u,pu;
         uint64_t event_time_us;
         uint64_t rx_timestamp_ns;
 
@@ -37,7 +51,6 @@ class EventBuffer {
 
     size_t n_events_ = 0;
     size_t n_levels_ = 0;
-
 public:
         [[nodiscard]] bool push (const DepthEvent& e) noexcept {
             const size_t need = e.bids.size() + e.asks.size();
@@ -52,7 +65,7 @@ public:
                 e.u,
                 e.pu,
                 e.event_time_us,
-                e.rx_timestaml_ns,
+                e.rx_timestamp_ns,
                 e.symbol,
                 uint32_t(n_levels_),
                 uint32_t(e.bids.size()),

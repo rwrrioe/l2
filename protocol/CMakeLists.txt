@@ -9,6 +9,6 @@ target_include_directories(l2_protocol PUBLIC
 
 target_link_libraries(l2_protocol
     PUBLIC  l2::common
-    PRIVATE simdjson l2::warnings l2::options)
+    PRIVATE simdjson::simdjson l2::warnings l2::options)
 
 target_compile_features(l2_protocol PUBLIC cxx_std_20)
