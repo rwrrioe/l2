@@ -65,6 +65,69 @@ ctest --test-dir build-asan
 
 Requires: C++20, CMake 3.24+, Linux. Deps pinned via FetchContent (simdjson, xxhash, ankerl, gtest, benchmark); Boost/OpenSSL from system.
 
+## CLI usage
+
+Four binaries, one pipeline. `<tick_fp>` is the venue tick size in 1e-8 fixed point:
+BTCUSDT tick = 0.01 → `1000000`.
+
+### `l2_record` — capture a raw journal
+
+```bash
+l2_record <out.bin> <symbol> <seconds>
+l2_record data/btc.bin BTCUSDT 60
+```
+
+Connects to the live depth stream and writes raw frames — **unparsed** — to the
+journal: WS depth diffs, REST snapshots (fetched on every (re)connect), and
+synthetic `Connected`/`Disconnected` control frames. The journal is the ground
+truth; parser and sequencer can change without invalidating old recordings.
+Prints frame/snapshot counts and journal drops on exit (frames over the 4 KiB
+record slot are dropped and counted, never silently).
+
+### `l2_replay` — deterministic reconstruction
+
+```bash
+l2_replay <frames.bin> <tick_fp> <hash.log>
+l2_replay data/btc.bin 1000000 hashes.log
+```
+
+Replays a journal through parser → sequencer → book → signals and emits one
+line per applied event: `u book_hash ofi weighted_mid` (plus `SNAP` lines at
+stitch points). Same journal → byte-identical log; diff two logs to prove a
+refactor changed nothing.
+
+### `l2_crosscheck` — differential storage test
+
+```bash
+l2_crosscheck <frames.bin> <tick_fp>
+l2_crosscheck data/btc.bin 1000000
+```
+
+Replays one journal into three books at once — `std::map` reference, banded
+array, hash — and compares top-32 hashes after **every** applied event. Exits 1
+naming the exact event where any backend diverges; prints `OK: N events` when
+all agree bit-for-bit.
+
+### `l2_live` — live pipeline
+
+```bash
+l2_live <symbol> <tick_fp>
+l2_live BTCUSDT 1000000
+```
+
+Full live loop: WS stream, REST snapshot on connect and on every detected gap,
+top-of-book + weighted mid + OFI printed as the book updates. Proves
+correctness on real data (throughput claims come from replay, see above).
+
+### End-to-end check
+
+```bash
+l2_record data/session.bin BTCUSDT 60
+l2_replay data/session.bin 1000000 a.log
+l2_replay data/session.bin 1000000 b.log && cmp a.log b.log   # determinism
+l2_crosscheck data/session.bin 1000000                        # storage agreement
+```
+
 ## Known limitations
 
 Stated up front because unstated limits are how benchmarks lie:
