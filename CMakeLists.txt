@@ -23,6 +23,7 @@ find_package(simdjson REQUIRED)
 
 add_subdirectory(common)
 add_subdirectory(spsc)
+add_subdirectory(utils)
 add_subdirectory(protocol)
 add_subdirectory(book)
 add_subdirectory(transport)

@@ -18,6 +18,7 @@ target_link_libraries(l2_transport
     PUBLIC
         l2::common
         l2::spsc
+        l2::utils
     PRIVATE
         Boost::headers
         OpenSSL::SSL
